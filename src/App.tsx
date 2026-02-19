@@ -1,11 +1,13 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, SoftShadows, ContactShadows, Text, Html } from '@react-three/drei';
+import { useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment } from '@react-three/drei';
 import { EffectComposer, Bloom, SSAO, TiltShift2 } from '@react-three/postprocessing';
 import { useStore, Item } from './store/gameStore';
 import { ChefEntity, WaiterEntity, CustomerEntity } from './components/world/Entities';
 import { Floor, Table, Stove } from './components/world/Assets';
 import * as THREE from 'three';
+import { Html } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
 // --- Components ---
 // Wrapper for Table to map game store item to 3D asset
@@ -26,7 +28,7 @@ const TableObj = ({ item }: { item: Item }) => {
 const StoveObj = ({ item }: { item: Item }) => {
     const updateItem = useStore(state => state.updateItem);
     
-    useFrame((state, delta) => {
+    useFrame((_state, delta) => {
         if (item.isCooking) {
             const newProgress = (item.cookingProgress || 0) + delta * 30; // Cook speed
             if (newProgress >= 100) {
@@ -70,7 +72,7 @@ const StoveObj = ({ item }: { item: Item }) => {
 // --- Main App Logic ---
 
 function GameWorld() {
-    const { items, customers, staff, mode, placeItem, selectItemType } = useStore();
+    const { items, customers, staff, mode, placeItem } = useStore();
     const [previewPos, setPreviewPos] = useState<[number, number] | null>(null);
 
     const handleFloorClick = (point: THREE.Vector3) => {
@@ -97,8 +99,8 @@ function GameWorld() {
             
             <Environment preset="city" />
             
-            <EffectComposer disableNormalPass>
-                <SSAO radius={0.4} intensity={25} luminanceInfluence={0.5} color="black" />
+            <EffectComposer>
+                <SSAO radius={0.4} intensity={25} luminanceInfluence={0.5} color={new THREE.Color('black')} />
                 <Bloom luminanceThreshold={1} mipmapBlur intensity={1.5} radius={0.6} />
                 <TiltShift2 blur={0.1} />
             </EffectComposer>

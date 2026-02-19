@@ -1,11 +1,10 @@
-import React, { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Html, Float } from '@react-three/drei';
-import { useStore, Customer, Staff, Item } from '../../store/gameStore';
+import { Text, Float } from '@react-three/drei';
+import { useStore, Customer, Staff } from '../../store/gameStore';
 import * as THREE from 'three';
 
 // --- Utils ---
-const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
 const SPEED = 2.5;
 
 // --- Components ---
@@ -15,7 +14,7 @@ export const ChefEntity = ({ data }: { data: Staff }) => {
   const updateStaff = useStore(state => state.updateStaff);
   const items = useStore(state => state.items);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!group.current) return;
 
     // Simple AI Logic
@@ -78,7 +77,7 @@ export const WaiterEntity = ({ data }: { data: Staff }) => {
     const updateStaff = useStore(state => state.updateStaff);
     const items = useStore(state => state.items);
   
-    useFrame((state, delta) => {
+    useFrame((_state, delta) => {
       if (!group.current) return;
   
       // Movement Logic
@@ -152,7 +151,7 @@ export const CustomerEntity = ({ data }: { data: Customer }) => {
   const addMoney = useStore(state => state.addMoney);
   const items = useStore(state => state.items);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!group.current) return;
 
     // Movement

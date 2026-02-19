@@ -1,18 +1,29 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Float } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 // --- High Fidelity Materials ---
-// In a real app we'd load textures, but here we procedurally enhance materials
 const tableWoodMaterial = new THREE.MeshStandardMaterial({ color: "#8B4513", roughness: 0.8 });
 const clothMaterial = new THREE.MeshStandardMaterial({ color: "#fefefe", roughness: 1.0 });
 const metalMaterial = new THREE.MeshStandardMaterial({ color: "#bdc3c7", metalness: 0.8, roughness: 0.2 });
 const stoveBodyMaterial = new THREE.MeshStandardMaterial({ color: "#2c3e50", roughness: 0.4 });
 
-export const Floor = () => {
+interface FloorProps {
+  onFloorClick?: (point: THREE.Vector3) => void;
+}
+
+export const Floor: React.FC<FloorProps> = ({ onFloorClick }) => {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+    <mesh 
+      rotation={[-Math.PI / 2, 0, 0]} 
+      position={[0, -0.01, 0]} 
+      receiveShadow
+      onClick={(e) => {
+        e.stopPropagation();
+        onFloorClick && onFloorClick(e.point);
+      }}
+    >
       <planeGeometry args={[40, 40]} />
       <meshStandardMaterial color="#ecf0f1" />
     </mesh>
@@ -25,7 +36,12 @@ export const Grid = () => {
   );
 };
 
-export const Table = ({ position, rotation = [0, 0, 0] }) => {
+interface PropProps {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}
+
+export const Table: React.FC<PropProps> = ({ position, rotation = [0, 0, 0] }) => {
   return (
     <group position={position} rotation={rotation}>
       {/* Table Top (Wood) */}
@@ -36,7 +52,6 @@ export const Table = ({ position, rotation = [0, 0, 0] }) => {
       {/* Table Cloth (Draped) */}
       <mesh position={[0, 0.76, 0]} receiveShadow material={clothMaterial}>
         <cylinderGeometry args={[0.55, 0.8, 0.4, 32, 1, true]} /> 
-        {/* Open ended cylinder to simulate cloth hanging */}
       </mesh>
       <mesh position={[0, 0.78, 0]} material={clothMaterial}>
          <cylinderGeometry args={[0.55, 0.55, 0.02, 32]} /> 
@@ -67,7 +82,7 @@ export const Table = ({ position, rotation = [0, 0, 0] }) => {
   );
 };
 
-export const Stove = ({ position, rotation = [0, 0, 0] }) => {
+export const Stove: React.FC<PropProps> = ({ position, rotation = [0, 0, 0] }) => {
   return (
     <group position={position} rotation={rotation}>
       {/* Main Body */}
@@ -109,17 +124,20 @@ export const Stove = ({ position, rotation = [0, 0, 0] }) => {
   );
 };
 
-export const Chef = ({ position, isMoving = false }) => {
+interface ChefProps {
+  position: [number, number, number];
+  isMoving?: boolean;
+}
+
+export const Chef: React.FC<ChefProps> = ({ position, isMoving = false }) => {
     const group = useRef<THREE.Group>(null);
     
     useFrame((state) => {
         if (group.current && isMoving) {
-            // Anime-style bouncy walk
             const t = state.clock.elapsedTime * 15;
             group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
             group.current.rotation.z = Math.sin(t) * 0.05;
         } else if (group.current) {
-            // Idle breathing
             group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
             group.current.rotation.z = 0;
         }
@@ -127,7 +145,7 @@ export const Chef = ({ position, isMoving = false }) => {
 
     return (
         <group ref={group} position={position}>
-            {/* Body (White Uniform) */}
+            {/* Body */}
             <mesh position={[0, 0.6, 0]} castShadow>
                 <capsuleGeometry args={[0.25, 0.6, 4, 16]} />
                 <meshStandardMaterial color="white" />
@@ -145,7 +163,7 @@ export const Chef = ({ position, isMoving = false }) => {
                 <meshStandardMaterial color="#e74c3c" />
             </mesh>
 
-            {/* Chef Hat (Poofy) */}
+            {/* Chef Hat */}
             <group position={[0, 1.35, 0]}>
                 <mesh position={[0, 0.1, 0]}>
                     <cylinderGeometry args={[0.2, 0.25, 0.2, 32]} />
@@ -167,7 +185,6 @@ export const Chef = ({ position, isMoving = false }) => {
                     <sphereGeometry args={[0.03]} />
                     <meshStandardMaterial color="black" />
                 </mesh>
-                {/* Mustache */}
                 <mesh position={[0, -0.05, 0.02]} rotation={[0,0,Math.PI/2]}>
                     <capsuleGeometry args={[0.02, 0.1]} />
                     <meshStandardMaterial color="#555" />
