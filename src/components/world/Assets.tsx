@@ -1,13 +1,20 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, useGLTF, Clone } from '@react-three/drei';
 import * as THREE from 'three';
 
-// --- High Fidelity Materials ---
-const tableWoodMaterial = new THREE.MeshStandardMaterial({ color: "#8B4513", roughness: 0.8 });
-const clothMaterial = new THREE.MeshStandardMaterial({ color: "#fefefe", roughness: 1.0 });
-const metalMaterial = new THREE.MeshStandardMaterial({ color: "#bdc3c7", metalness: 0.8, roughness: 0.2 });
-const stoveBodyMaterial = new THREE.MeshStandardMaterial({ color: "#2c3e50", roughness: 0.4 });
+// --- Assets Config ---
+const CDN_URL = "https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models";
+
+// Preload common assets to prevent pop-in
+useGLTF.preload(`${CDN_URL}/korrigan-hat/model.gltf`); // Chef
+useGLTF.preload(`${CDN_URL}/korrigan-wolf/model.gltf`); // Waiter
+useGLTF.preload(`${CDN_URL}/korrigan-baby/model.gltf`); // Customer
+useGLTF.preload(`${CDN_URL}/crate-table/model.gltf`); // Table (Using crate as rustic table)
+useGLTF.preload(`${CDN_URL}/stove/model.gltf`); // Stove (If available, else fallback)
+
+// --- Fallback Materials ---
+const fallbackMat = new THREE.MeshStandardMaterial({ color: "#e74c3c" });
 
 interface FloorProps {
   onFloorClick?: (point: THREE.Vector3) => void;
@@ -25,14 +32,14 @@ export const Floor: React.FC<FloorProps> = ({ onFloorClick }) => {
       }}
     >
       <planeGeometry args={[40, 40]} />
-      <meshStandardMaterial color="#ecf0f1" />
+      <meshStandardMaterial color="#7ab885" />
     </mesh>
   );
 };
 
 export const Grid = () => {
   return (
-    <gridHelper args={[40, 40, 0xbdc3c7, 0xeef2f3]} position={[0, 0.01, 0]} />
+    <gridHelper args={[40, 40, 0xffffff, 0xffffff]} position={[0, 0.01, 0]} material-opacity={0.2} material-transparent />
   );
 };
 
@@ -42,83 +49,56 @@ interface PropProps {
 }
 
 export const Table: React.FC<PropProps> = ({ position, rotation = [0, 0, 0] }) => {
+  // Using a "Crate Table" for a stylized look
+  const { scene } = useGLTF(`${CDN_URL}/crate-table/model.gltf`);
+  
   return (
-    <group position={position} rotation={rotation}>
-      {/* Table Top (Wood) */}
-      <mesh position={[0, 0.75, 0]} castShadow receiveShadow material={tableWoodMaterial}>
-        <cylinderGeometry args={[0.7, 0.7, 0.05, 32]} />
+    <group position={position} rotation={[rotation[0], rotation[1], rotation[2]]}>
+      <Clone object={scene} scale={1.5} castShadow receiveShadow />
+      {/* Table Cloth Overlay */}
+      <mesh position={[0, 1.1, 0]} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
+          <circleGeometry args={[0.6, 32]} />
+          <meshStandardMaterial color="white" />
       </mesh>
-      
-      {/* Table Cloth (Draped) */}
-      <mesh position={[0, 0.76, 0]} receiveShadow material={clothMaterial}>
-        <cylinderGeometry args={[0.55, 0.8, 0.4, 32, 1, true]} /> 
-      </mesh>
-      <mesh position={[0, 0.78, 0]} material={clothMaterial}>
-         <cylinderGeometry args={[0.55, 0.55, 0.02, 32]} /> 
-      </mesh>
-
-      {/* Central Leg (Fancy) */}
-      <mesh position={[0, 0.35, 0]} castShadow material={tableWoodMaterial}>
-        <cylinderGeometry args={[0.1, 0.15, 0.7, 8]} />
-      </mesh>
-      
-      {/* Base (Fancy) */}
-      <mesh position={[0, 0.05, 0]} receiveShadow material={tableWoodMaterial}>
-        <cylinderGeometry args={[0.3, 0.4, 0.1, 8]} />
-      </mesh>
-
-      {/* Chair (Static Decoration) */}
-      <group position={[0, 0, 1.1]} rotation={[0, Math.PI, 0]}>
-          <mesh position={[0, 0.25, 0]} castShadow material={tableWoodMaterial}>
-              <boxGeometry args={[0.5, 0.05, 0.5]} />
-          </mesh>
-          <mesh position={[0.2, 0.125, 0.2]} material={tableWoodMaterial}><cylinderGeometry args={[0.03,0.03,0.25]} /></mesh>
-          <mesh position={[-0.2, 0.125, 0.2]} material={tableWoodMaterial}><cylinderGeometry args={[0.03,0.03,0.25]} /></mesh>
-          <mesh position={[0.2, 0.4, -0.2]} material={tableWoodMaterial}><cylinderGeometry args={[0.03,0.03,0.8]} /></mesh>
-          <mesh position={[-0.2, 0.4, -0.2]} material={tableWoodMaterial}><cylinderGeometry args={[0.03,0.03,0.8]} /></mesh>
-          <mesh position={[0, 0.6, -0.2]} material={tableWoodMaterial}><boxGeometry args={[0.5, 0.2, 0.05]} /></mesh>
-      </group>
     </group>
   );
 };
 
 export const Stove: React.FC<PropProps> = ({ position, rotation = [0, 0, 0] }) => {
+  // Fallback procedural stove if specific model missing, but let's try to make it look like a pro appliance
   return (
     <group position={position} rotation={rotation}>
-      {/* Main Body */}
-      <mesh position={[0, 0.5, 0]} castShadow material={stoveBodyMaterial}>
-        <boxGeometry args={[1, 1, 1]} />
+      {/* Main Unit */}
+      <mesh position={[0, 0.6, 0]} castShadow>
+        <boxGeometry args={[1.2, 1.2, 1.2]} />
+        <meshStandardMaterial color="#2c3e50" roughness={0.2} metalness={0.5} />
       </mesh>
       
-      {/* Stainless Steel Top */}
-      <mesh position={[0, 1.01, 0]} receiveShadow material={metalMaterial}>
-        <boxGeometry args={[1, 0.05, 1]} />
+      {/* Cooktop */}
+      <mesh position={[0, 1.21, 0]}>
+        <boxGeometry args={[1.2, 0.05, 1.2]} />
+        <meshStandardMaterial color="#95a5a6" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* Burners (Black Iron) */}
-      <mesh position={[-0.25, 1.04, -0.25]} rotation={[-Math.PI/2, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 0.02, 16]} />
-        <meshStandardMaterial color="#1a1a1a" />
+      {/* Burners */}
+      <mesh position={[-0.3, 1.24, -0.3]} rotation={[-Math.PI/2, 0, 0]}>
+        <ringGeometry args={[0.1, 0.2, 16]} />
+        <meshStandardMaterial color="#e74c3c" emissive="#c0392b" emissiveIntensity={2} />
       </mesh>
-      <mesh position={[0.25, 1.04, 0.25]} rotation={[-Math.PI/2, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 0.02, 16]} />
-        <meshStandardMaterial color="#1a1a1a" />
+      <mesh position={[0.3, 1.24, 0.3]} rotation={[-Math.PI/2, 0, 0]}>
+        <ringGeometry args={[0.1, 0.2, 16]} />
+        <meshStandardMaterial color="#e74c3c" emissive="#c0392b" emissiveIntensity={2} />
       </mesh>
 
-      {/* Knobs */}
-      <group position={[0, 0.85, 0.51]}>
-        <mesh position={[-0.3, 0, 0]} rotation={[Math.PI/2, 0, 0]} material={metalMaterial}>
-             <cylinderGeometry args={[0.08, 0.08, 0.05, 16]} />
-        </mesh>
-        <mesh position={[0.3, 0, 0]} rotation={[Math.PI/2, 0, 0]} material={metalMaterial}>
-             <cylinderGeometry args={[0.08, 0.08, 0.05, 16]} />
-        </mesh>
-      </group>
-      
-      {/* Oven Window */}
-      <mesh position={[0, 0.4, 0.51]}>
-          <planeGeometry args={[0.7, 0.5]} />
-          <meshStandardMaterial color="#111" roughness={0.1} metalness={0.9} />
+      {/* Oven Door */}
+      <mesh position={[0, 0.5, 0.61]}>
+          <planeGeometry args={[0.8, 0.6]} />
+          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.1} />
+      </mesh>
+      {/* Handle */}
+      <mesh position={[0, 0.75, 0.65]}>
+          <boxGeometry args={[0.6, 0.05, 0.05]} />
+          <meshStandardMaterial color="#bdc3c7" />
       </mesh>
     </group>
   );
@@ -129,69 +109,33 @@ interface ChefProps {
   isMoving?: boolean;
 }
 
+// Character Components using PMNDRS Models (Cute fantasy creatures as staff)
+
 export const Chef: React.FC<ChefProps> = ({ position, isMoving = false }) => {
     const group = useRef<THREE.Group>(null);
+    const { scene } = useGLTF(`${CDN_URL}/korrigan-hat/model.gltf`);
     
     useFrame((state) => {
-        if (group.current && isMoving) {
-            const t = state.clock.elapsedTime * 15;
-            group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
-            group.current.rotation.z = Math.sin(t) * 0.05;
-        } else if (group.current) {
-            group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
-            group.current.rotation.z = 0;
+        if (group.current) {
+            // Smooth look-at and bounce
+            const t = state.clock.elapsedTime * 10;
+            const bounce = isMoving ? Math.abs(Math.sin(t)) * 0.1 : Math.sin(t*0.5) * 0.02;
+            group.current.position.y = position[1] + bounce;
+            
+            // Wobble
+            group.current.rotation.z = isMoving ? Math.sin(t) * 0.05 : 0;
         }
     });
 
     return (
         <group ref={group} position={position}>
-            {/* Body */}
-            <mesh position={[0, 0.6, 0]} castShadow>
-                <capsuleGeometry args={[0.25, 0.6, 4, 16]} />
+            <Clone object={scene} scale={2} castShadow />
+            {/* Chef Hat Overlay (if model doesn't have one) */}
+            <mesh position={[0, 1.8, 0]} castShadow>
+                <cylinderGeometry args={[0.3, 0.4, 0.6]} />
                 <meshStandardMaterial color="white" />
             </mesh>
-            
-            {/* Head */}
-            <mesh position={[0, 1.15, 0]} castShadow>
-                <sphereGeometry args={[0.22, 32, 32]} />
-                <meshStandardMaterial color="#ffccaa" />
-            </mesh>
-
-            {/* Red Scarf */}
-            <mesh position={[0, 0.95, 0]} rotation={[0.2, 0, 0]}>
-                <torusGeometry args={[0.26, 0.05, 8, 32]} />
-                <meshStandardMaterial color="#e74c3c" />
-            </mesh>
-
-            {/* Chef Hat */}
-            <group position={[0, 1.35, 0]}>
-                <mesh position={[0, 0.1, 0]}>
-                    <cylinderGeometry args={[0.2, 0.25, 0.2, 32]} />
-                    <meshStandardMaterial color="white" />
-                </mesh>
-                <mesh position={[0, 0.35, 0]}>
-                     <sphereGeometry args={[0.3, 32, 16, 0, Math.PI*2, 0, Math.PI/1.5]} />
-                     <meshStandardMaterial color="white" />
-                </mesh>
-            </group>
-
-            {/* Face */}
-            <group position={[0, 1.15, 0.18]}>
-                <mesh position={[0.08, 0.02, 0]}>
-                    <sphereGeometry args={[0.03]} />
-                    <meshStandardMaterial color="black" />
-                </mesh>
-                <mesh position={[-0.08, 0.02, 0]}>
-                    <sphereGeometry args={[0.03]} />
-                    <meshStandardMaterial color="black" />
-                </mesh>
-                <mesh position={[0, -0.05, 0.02]} rotation={[0,0,Math.PI/2]}>
-                    <capsuleGeometry args={[0.02, 0.1]} />
-                    <meshStandardMaterial color="#555" />
-                </mesh>
-            </group>
-            
-            <Text position={[0, 2.0, 0]} fontSize={0.15} color="#333" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="white">
+            <Text position={[0, 2.5, 0]} fontSize={0.2} color="white" outlineWidth={0.02} outlineColor="black">
                 Chef
             </Text>
         </group>
@@ -200,59 +144,25 @@ export const Chef: React.FC<ChefProps> = ({ position, isMoving = false }) => {
 
 export const Waiter: React.FC<ChefProps> = ({ position, isMoving = false }) => {
     const group = useRef<THREE.Group>(null);
+    const { scene } = useGLTF(`${CDN_URL}/korrigan-wolf/model.gltf`);
     
     useFrame((state) => {
-        if (group.current && isMoving) {
-            const t = state.clock.elapsedTime * 15;
-            group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
-            group.current.rotation.z = Math.sin(t) * 0.05;
-        } else if (group.current) {
-            group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
-            group.current.rotation.z = 0;
+        if (group.current) {
+            const t = state.clock.elapsedTime * 10;
+            const bounce = isMoving ? Math.abs(Math.sin(t)) * 0.1 : Math.sin(t*0.5) * 0.02;
+            group.current.position.y = position[1] + bounce;
         }
     });
 
     return (
         <group ref={group} position={position}>
-            {/* Legs (Black) */}
-            <mesh position={[-0.15, 0.4, 0]} castShadow>
-                <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-                <meshStandardMaterial color="#2c3e50" />
+            <Clone object={scene} scale={2} castShadow />
+            {/* Apron Overlay */}
+            <mesh position={[0, 0.8, 0.4]} rotation={[-0.2, 0, 0]}>
+                <planeGeometry args={[0.5, 0.5]} />
+                <meshStandardMaterial color="#2ecc71" />
             </mesh>
-            <mesh position={[0.15, 0.4, 0]} castShadow>
-                <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-                <meshStandardMaterial color="#2c3e50" />
-            </mesh>
-
-            {/* Torso (White Shirt) */}
-            <mesh position={[0, 1.1, 0]} castShadow>
-                <boxGeometry args={[0.5, 0.7, 0.3]} />
-                <meshStandardMaterial color="white" />
-            </mesh>
-
-            {/* Apron (Green) */}
-            <mesh position={[0, 0.9, 0.16]}>
-                <planeGeometry args={[0.4, 0.6]} />
-                <meshStandardMaterial color="#27ae60" side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[0, 1.15, 0.16]} rotation={[0,0,0]}>
-                <planeGeometry args={[0.25, 0.3]} />
-                <meshStandardMaterial color="#27ae60" side={THREE.DoubleSide} />
-            </mesh>
-            
-            {/* Head */}
-            <mesh position={[0, 1.6, 0]} castShadow>
-                <sphereGeometry args={[0.2, 32, 32]} />
-                <meshStandardMaterial color="#ffccaa" />
-            </mesh>
-
-            {/* Hair (Black) */}
-            <mesh position={[0, 1.7, 0]}>
-                <sphereGeometry args={[0.21, 32, 32, 0, Math.PI*2, 0, Math.PI/2]} />
-                <meshStandardMaterial color="#2c3e50" />
-            </mesh>
-
-            <Text position={[0, 2.0, 0]} fontSize={0.15} color="#333" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="white">
+            <Text position={[0, 2.2, 0]} fontSize={0.2} color="white" outlineWidth={0.02} outlineColor="black">
                 Waiter
             </Text>
         </group>
@@ -261,52 +171,24 @@ export const Waiter: React.FC<ChefProps> = ({ position, isMoving = false }) => {
 
 export const Customer: React.FC<ChefProps> = ({ position, isMoving = false }) => {
     const group = useRef<THREE.Group>(null);
+    const { scene } = useGLTF(`${CDN_URL}/korrigan-baby/model.gltf`);
     
     useFrame((state) => {
-        if (group.current && isMoving) {
-            const t = state.clock.elapsedTime * 15;
-            group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
-            group.current.rotation.z = Math.sin(t) * 0.05;
-        } else if (group.current) {
-            group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
-            group.current.rotation.z = 0;
+        if (group.current) {
+            const t = state.clock.elapsedTime * 15; // Faster baby steps
+            const bounce = isMoving ? Math.abs(Math.sin(t)) * 0.1 : Math.sin(t*0.5) * 0.02;
+            group.current.position.y = position[1] + bounce;
         }
     });
 
     return (
         <group ref={group} position={position}>
-            {/* Legs (Blue Jeans) */}
-            <mesh position={[-0.15, 0.4, 0]} castShadow>
-                <cylinderGeometry args={[0.09, 0.09, 0.8]} />
-                <meshStandardMaterial color="#2980b9" />
-            </mesh>
-            <mesh position={[0.15, 0.4, 0]} castShadow>
-                <cylinderGeometry args={[0.09, 0.09, 0.8]} />
-                <meshStandardMaterial color="#2980b9" />
-            </mesh>
-
-            {/* Torso (T-Shirt) */}
-            <mesh position={[0, 1.1, 0]} castShadow>
-                <capsuleGeometry args={[0.25, 0.6, 4, 16]} />
-                <meshStandardMaterial color="#e67e22" />
-            </mesh>
-            
-            {/* Head */}
-            <mesh position={[0, 1.6, 0]} castShadow>
-                <sphereGeometry args={[0.22, 32, 32]} />
-                <meshStandardMaterial color="#ffccaa" />
-            </mesh>
-
-            {/* Hair (Brown) */}
-            <mesh position={[0, 1.7, 0]}>
-                <sphereGeometry args={[0.23, 32, 32, 0, Math.PI*2, 0, Math.PI/2.5]} />
-                <meshStandardMaterial color="#795548" />
-            </mesh>
-
-            <Text position={[0, 2.0, 0]} fontSize={0.15} color="#333" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="white">
+            <Clone object={scene} scale={1.5} castShadow />
+            <Text position={[0, 1.5, 0]} fontSize={0.2} color="white" outlineWidth={0.02} outlineColor="black">
                 Guest
             </Text>
         </group>
     );
 };
+
 
