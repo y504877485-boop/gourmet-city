@@ -198,3 +198,115 @@ export const Chef: React.FC<ChefProps> = ({ position, isMoving = false }) => {
     );
 };
 
+export const Waiter: React.FC<ChefProps> = ({ position, isMoving = false }) => {
+    const group = useRef<THREE.Group>(null);
+    
+    useFrame((state) => {
+        if (group.current && isMoving) {
+            const t = state.clock.elapsedTime * 15;
+            group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
+            group.current.rotation.z = Math.sin(t) * 0.05;
+        } else if (group.current) {
+            group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
+            group.current.rotation.z = 0;
+        }
+    });
+
+    return (
+        <group ref={group} position={position}>
+            {/* Legs (Black) */}
+            <mesh position={[-0.15, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+                <meshStandardMaterial color="#2c3e50" />
+            </mesh>
+            <mesh position={[0.15, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+                <meshStandardMaterial color="#2c3e50" />
+            </mesh>
+
+            {/* Torso (White Shirt) */}
+            <mesh position={[0, 1.1, 0]} castShadow>
+                <boxGeometry args={[0.5, 0.7, 0.3]} />
+                <meshStandardMaterial color="white" />
+            </mesh>
+
+            {/* Apron (Green) */}
+            <mesh position={[0, 0.9, 0.16]}>
+                <planeGeometry args={[0.4, 0.6]} />
+                <meshStandardMaterial color="#27ae60" side={THREE.DoubleSide} />
+            </mesh>
+            <mesh position={[0, 1.15, 0.16]} rotation={[0,0,0]}>
+                <planeGeometry args={[0.25, 0.3]} />
+                <meshStandardMaterial color="#27ae60" side={THREE.DoubleSide} />
+            </mesh>
+            
+            {/* Head */}
+            <mesh position={[0, 1.6, 0]} castShadow>
+                <sphereGeometry args={[0.2, 32, 32]} />
+                <meshStandardMaterial color="#ffccaa" />
+            </mesh>
+
+            {/* Hair (Black) */}
+            <mesh position={[0, 1.7, 0]}>
+                <sphereGeometry args={[0.21, 32, 32, 0, Math.PI*2, 0, Math.PI/2]} />
+                <meshStandardMaterial color="#2c3e50" />
+            </mesh>
+
+            <Text position={[0, 2.0, 0]} fontSize={0.15} color="#333" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="white">
+                Waiter
+            </Text>
+        </group>
+    );
+};
+
+export const Customer: React.FC<ChefProps> = ({ position, isMoving = false }) => {
+    const group = useRef<THREE.Group>(null);
+    
+    useFrame((state) => {
+        if (group.current && isMoving) {
+            const t = state.clock.elapsedTime * 15;
+            group.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.1;
+            group.current.rotation.z = Math.sin(t) * 0.05;
+        } else if (group.current) {
+            group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
+            group.current.rotation.z = 0;
+        }
+    });
+
+    return (
+        <group ref={group} position={position}>
+            {/* Legs (Blue Jeans) */}
+            <mesh position={[-0.15, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.09, 0.09, 0.8]} />
+                <meshStandardMaterial color="#2980b9" />
+            </mesh>
+            <mesh position={[0.15, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.09, 0.09, 0.8]} />
+                <meshStandardMaterial color="#2980b9" />
+            </mesh>
+
+            {/* Torso (T-Shirt) */}
+            <mesh position={[0, 1.1, 0]} castShadow>
+                <capsuleGeometry args={[0.25, 0.6, 4, 16]} />
+                <meshStandardMaterial color="#e67e22" />
+            </mesh>
+            
+            {/* Head */}
+            <mesh position={[0, 1.6, 0]} castShadow>
+                <sphereGeometry args={[0.22, 32, 32]} />
+                <meshStandardMaterial color="#ffccaa" />
+            </mesh>
+
+            {/* Hair (Brown) */}
+            <mesh position={[0, 1.7, 0]}>
+                <sphereGeometry args={[0.23, 32, 32, 0, Math.PI*2, 0, Math.PI/2.5]} />
+                <meshStandardMaterial color="#795548" />
+            </mesh>
+
+            <Text position={[0, 2.0, 0]} fontSize={0.15} color="#333" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="white">
+                Guest
+            </Text>
+        </group>
+    );
+};
+
