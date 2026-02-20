@@ -62,17 +62,45 @@ interface GameState {
 export const useStore = create<GameState>()(
   persist(
     (set, get) => ({
-      money: 2000,
-      level: 1,
+      money: 50000, // Rich start
+      level: 10,
       items: [
-        { id: 't1', type: 'table', x: 2, y: 2, rotation: 0 },
-        { id: 't2', type: 'table', x: -2, y: 2, rotation: 0 },
-        { id: 's1', type: 'stove', x: 0, y: -2, rotation: 0 }
+        // Kitchen Area
+        { id: 's1', type: 'stove', x: -4, y: -4, rotation: 0 },
+        { id: 's2', type: 'stove', x: -2, y: -4, rotation: 0 },
+        { id: 's3', type: 'stove', x: 0, y: -4, rotation: 0 },
+        { id: 's4', type: 'stove', x: 2, y: -4, rotation: 0 },
+        { id: 's5', type: 'stove', x: 4, y: -4, rotation: 0 },
+        
+        // Dining Area - Row 1
+        { id: 't1', type: 'table', x: -4, y: 0, rotation: 0 },
+        { id: 't2', type: 'table', x: -2, y: 0, rotation: 0 },
+        { id: 't3', type: 'table', x: 0, y: 0, rotation: 0 },
+        { id: 't4', type: 'table', x: 2, y: 0, rotation: 0 },
+        { id: 't5', type: 'table', x: 4, y: 0, rotation: 0 },
+
+        // Dining Area - Row 2
+        { id: 't6', type: 'table', x: -4, y: 3, rotation: 0 },
+        { id: 't7', type: 'table', x: -2, y: 3, rotation: 0 },
+        { id: 't8', type: 'table', x: 0, y: 3, rotation: 0 },
+        { id: 't9', type: 'table', x: 2, y: 3, rotation: 0 },
+        { id: 't10', type: 'table', x: 4, y: 3, rotation: 0 },
       ],
       customers: [],
       staff: [
-        { id: 'c1', role: 'chef', state: 'idle', position: [0, 0, -3], targetPos: null },
-        { id: 'w1', role: 'waiter', state: 'idle', position: [2, 0, -3], targetPos: null }
+        // Chefs Army
+        { id: 'c1', role: 'chef', state: 'idle', position: [-4, 0, -6], targetPos: null },
+        { id: 'c2', role: 'chef', state: 'idle', position: [-2, 0, -6], targetPos: null },
+        { id: 'c3', role: 'chef', state: 'idle', position: [0, 0, -6], targetPos: null },
+        { id: 'c4', role: 'chef', state: 'idle', position: [2, 0, -6], targetPos: null },
+        { id: 'c5', role: 'chef', state: 'idle', position: [4, 0, -6], targetPos: null },
+
+        // Waiters Army
+        { id: 'w1', role: 'waiter', state: 'idle', position: [-4, 0, 6], targetPos: null },
+        { id: 'w2', role: 'waiter', state: 'idle', position: [-2, 0, 6], targetPos: null },
+        { id: 'w3', role: 'waiter', state: 'idle', position: [0, 0, 6], targetPos: null },
+        { id: 'w4', role: 'waiter', state: 'idle', position: [2, 0, 6], targetPos: null },
+        { id: 'w5', role: 'waiter', state: 'idle', position: [4, 0, 6], targetPos: null },
       ],
       mode: 'play',
       selectedItemType: null,

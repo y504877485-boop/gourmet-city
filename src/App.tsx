@@ -205,7 +205,7 @@ function GameLoop() {
     useEffect(() => {
         const interval = setInterval(() => {
             spawnCustomer();
-        }, 3000); 
+        }, 800); // Crazy spawn rate!
         return () => clearInterval(interval);
     }, []);
 
