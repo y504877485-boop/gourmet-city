@@ -169,7 +169,7 @@ export const useStore = create<GameState>()(
       }))
     }),
     {
-      name: 'gourmet-city-storage',
+      name: 'gourmet-city-storage-v2',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
         money: state.money, 
