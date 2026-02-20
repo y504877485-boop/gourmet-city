@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
+
+// Simple ID generator to avoid external dependencies
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export type Position = [number, number, number];
 
@@ -86,7 +88,7 @@ export const useStore = create<GameState>()(
         if (state.money < cost) return;
 
         set((state) => ({
-          items: [...state.items, { id: uuidv4(), type, x, y, rotation: 0 }],
+          items: [...state.items, { id: generateId(), type, x, y, rotation: 0 }],
           money: state.money - cost,
           mode: 'play',
           selectedItemType: null
@@ -106,7 +108,7 @@ export const useStore = create<GameState>()(
         if (tables.length === 0) return;
         
         const randomTable = tables[Math.floor(Math.random() * tables.length)];
-        const customerId = uuidv4();
+        const customerId = generateId();
 
         // Mark table occupied
         get().updateItem(randomTable.id, { occupiedBy: customerId });
@@ -144,8 +146,6 @@ export const useStore = create<GameState>()(
       partialize: (state) => ({ 
         money: state.money, 
         items: state.items, 
-        // Do not persist transient entities like customers/staff positions to avoid glitches on reload
-        // But persistent staff (inventory) should be saved if we had hiring logic. Currently staff is hardcoded.
       }),
     }
   )

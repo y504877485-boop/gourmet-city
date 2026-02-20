@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
-import { EffectComposer, Bloom, SSAO, TiltShift2 } from '@react-three/postprocessing';
+// import { EffectComposer, Bloom, SSAO, TiltShift2 } from '@react-three/postprocessing';
 import { useStore, Item } from './store/gameStore';
 import { ChefEntity, WaiterEntity, CustomerEntity } from './components/world/Entities';
 import { Floor, Table, Stove } from './components/world/Assets';
@@ -99,11 +99,12 @@ function GameWorld() {
             
             <Environment preset="city" />
             
-            <EffectComposer>
+            {/* Post-processing temporarily disabled for stability */}
+            {/* <EffectComposer>
                 <SSAO radius={0.4} intensity={25} luminanceInfluence={0.5} color={new THREE.Color('black')} />
                 <Bloom luminanceThreshold={1} mipmapBlur intensity={1.5} radius={0.6} />
                 <TiltShift2 blur={0.1} />
-            </EffectComposer>
+            </EffectComposer> */}
 
             <Floor onFloorClick={handleFloorClick} />
             
